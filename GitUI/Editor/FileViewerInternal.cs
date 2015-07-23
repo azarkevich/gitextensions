@@ -15,6 +15,12 @@ namespace GitUI.Editor
         private readonly DiffViewerLineNumberCtrl _lineNumbersControl;
         private bool _isGotoLineUIApplicable = true;
 
+        static FileViewerInternal()
+        {
+            // init custom syntax highlightings
+            HighlightingManager.Manager.AddSyntaxModeFileProvider(new GitExtensionsResourceSyntaxModeProvider());
+        }
+
         public FileViewerInternal()
         {
             InitializeComponent();
