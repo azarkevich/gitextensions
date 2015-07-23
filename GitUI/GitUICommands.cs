@@ -1930,8 +1930,10 @@ namespace GitUI
                         Module = Module.SuperprojectModule;
                     RunFileHistoryCommand(args);
                     return;
-                case "fileeditor":  // filename
-                    if (!StartFileEditorDialog(args[2]))
+                case "fileeditor":  // filename [--syntax syntax_name]
+                    string syntax;
+                    arguments.TryGetValue("syntax", out syntax);
+                    if (!StartFileEditorDialog(args[2], highlightingSyntax: syntax))
                         System.Environment.ExitCode = -1;
                     return;
                 case "formatpatch":
@@ -2102,9 +2104,9 @@ namespace GitUI
             StartRebaseDialog(branch);
         }
 
-        public bool StartFileEditorDialog(string filename, bool showWarning = false)
+        public bool StartFileEditorDialog(string filename, bool showWarning = false, string highlightingSyntax = null)
         {
-            using (var formEditor = new FormEditor(this, filename, showWarning))
+            using (var formEditor = new FormEditor(this, filename, showWarning, highlightingSyntax))
                 return formEditor.ShowDialog() != DialogResult.Cancel;
         }
 
