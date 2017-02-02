@@ -119,16 +119,30 @@ namespace GitPluginShared.Commands
 
         private static CommandTarget GetProjectItemTarget(ProjectItem projectItem)
         {
-            switch (projectItem.Kind.ToUpper())
+            try
             {
-                case Constants.vsProjectItemKindPhysicalFile:
-                    return CommandTarget.File;
-                case Constants.vsProjectItemKindVirtualFolder:
-                    return CommandTarget.VirtualFolder;
-                case Constants.vsProjectItemKindPhysicalFolder:
-                    return CommandTarget.PhysicalFolder;
-                default:
-                    return CommandTarget.Any;
+                switch (projectItem.Kind.ToUpper())
+                {
+                    case Constants.vsProjectItemKindPhysicalFile:
+                        return CommandTarget.File;
+                    case Constants.vsProjectItemKindVirtualFolder:
+                        return CommandTarget.VirtualFolder;
+                    case Constants.vsProjectItemKindPhysicalFolder:
+                        return CommandTarget.PhysicalFolder;
+                    default:
+                        return CommandTarget.Any;
+                }
+            }
+            catch (System.Runtime.InteropServices.COMException ex)
+            {
+                // some projects, like WiX can not implement all methods (Kind, IsDirty WiX toolset issue #4200)
+                // pretend noting selected in case when we can't analyze project item kind
+                if (ex.ErrorCode == -2147352573)
+                {
+                    //Log.Warning("COMException: Member not found.");
+                    return CommandTarget.Empty;
+                }
+                throw;
             }
         }
 
