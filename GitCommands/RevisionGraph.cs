@@ -109,7 +109,7 @@ namespace GitCommands
         public string BranchFilter = String.Empty;
         public RevisionGraphInMemFilter InMemFilter;
         private string _selectedBranchName;
-        static char[] ShellGlobCharacters = new[] { '?', '*', '[' };
+        static readonly char[] ShellGlobCharacters = new[] { '?', '*', '[' };
 
         public void Execute()
         {
@@ -183,8 +183,25 @@ namespace GitCommands
 
             string branchFilter = BranchFilter;
             if ((!string.IsNullOrWhiteSpace(BranchFilter)) &&
-                (BranchFilter.IndexOfAny(ShellGlobCharacters) >= 0))
-                branchFilter = "--branches=" + BranchFilter;
+                (BranchFilter.IndexOfAny(ShellGlobCharacters) >= 0 || (BranchFilter.IndexOf(' ') >= 0)))
+            {
+                // split branch filter by space and compose multibranch filter
+                var filters = BranchFilter.Split(' ')
+                    .Where(b => !string.IsNullOrWhiteSpace(b))
+                    .Select(b => {
+                        if(b.IndexOfAny(ShellGlobCharacters) < 0)
+                        {
+                            // if branch filter does not contains glob symbols,
+                            // git add /* at end of specified branch, so
+                            // --branches=master will be threated as --branches=master/*
+                            // so add fake glob pattern master -> master[r]
+                            b = b.Substring(0, b.Length - 1) + "[" + b[b.Length - 1] + "]";
+                        }
+                        return "--branches=" + b;
+                    })
+                ;
+                branchFilter = string.Join(" ", filters);
+            }
 
             string arguments = String.Format(CultureInfo.InvariantCulture,
                 "log -z {2} --pretty=format:\"{1}\" {0} {3} -- {4}",
@@ -238,7 +255,7 @@ namespace GitCommands
 
                 int lastDataBlockIndex = dataBlocks.Length - 1;
 
-                // Return all the blocks until the last one 
+                // Return all the blocks until the last one
                 for (int i = 1; i < lastDataBlockIndex; i++)
                 {
                     yield return dataBlocks[i];
@@ -289,7 +306,7 @@ namespace GitCommands
         }
 
         /// <summary>
-        /// 
+        ///
         /// </summary>
         /// <returns>Refs loaded while the latest processing of git log</returns>
         public IEnumerable<IGitRef> LatestRefs()
@@ -392,7 +409,7 @@ namespace GitCommands
                 case ReadStep.FileName:
                     if (!string.IsNullOrEmpty(data))
                     {
-                        // Git adds \n between the format string (ends with \0 in our case) 
+                        // Git adds \n between the format string (ends with \0 in our case)
                         // and the first file name. So, we need to remove it from the file name.
                         _revision.Name = data.TrimStart(new char[] { '\n' });
                     }
