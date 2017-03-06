@@ -30,6 +30,32 @@ namespace GitCommands
         public abstract bool PassThru(GitRevision rev);
     }
 
+    public class BranchFilters
+    {
+        public readonly string SingleFilter;
+        public readonly string[] Branches;
+        public readonly string[] Remotes;
+        public readonly string[] Tags;
+        public readonly string[] Glob;
+        public readonly string[] Exclude;
+        public readonly bool Reflog;
+
+        public BranchFilters(string[] branches, string[] remotes, string[] tags, string[] glob, string[] exclude, bool reflog)
+        {
+            Branches = branches;
+            Remotes = remotes;
+            Tags = tags;
+            Glob = glob;
+            Exclude = exclude;
+            Reflog = reflog;
+        }
+
+        public BranchFilters(string singleFilter)
+        {
+            SingleFilter = singleFilter;
+        }
+    }
+
     public sealed class RevisionGraph : IDisposable
     {
         public event EventHandler Exited;
